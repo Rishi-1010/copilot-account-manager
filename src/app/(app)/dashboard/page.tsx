@@ -86,7 +86,6 @@ export default function DashboardPage() {
           data={accounts}
           onRefresh={refresh}
           onDelete={removeAccount}
-          onAdd={addAccount}
         />
       )}
     </div>
