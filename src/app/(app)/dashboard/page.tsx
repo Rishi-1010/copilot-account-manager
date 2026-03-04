@@ -38,7 +38,7 @@ export default function DashboardPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => accounts.forEach((a) => refresh(a.id))}
+            onClick={() => refresh()}
           >
             <IconRefresh className="mr-1.5 size-4" />
             Refresh All

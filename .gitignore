@@ -36,6 +36,7 @@ yarn-error.log*
 
 # vercel
 .vercel
+sens db pat tokens
 
 # typescript
 *.tsbuildinfo
