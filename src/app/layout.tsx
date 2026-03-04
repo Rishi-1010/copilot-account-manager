@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
+import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { AuthProvider } from '@/lib/auth/auth-context';
+import { ProtectedRoute } from '@/lib/auth/protected-route';
 import './globals.css';
 
 const geistSans = Geist({
@@ -36,7 +39,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <TooltipProvider>{children}</TooltipProvider>
+          <AuthProvider>
+            <ProtectedRoute>
+              <TooltipProvider>{children}</TooltipProvider>
+            </ProtectedRoute>
+            <Toaster />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
