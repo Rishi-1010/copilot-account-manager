@@ -28,6 +28,8 @@ export async function getAllAccounts(): Promise<CopilotAccount[]> {
     ...row,
     quotaResetDateUtc: row.quotaResetDateUtc ? row.quotaResetDateUtc.toISOString() : '',
     lastSnapshotUtc: row.lastSnapshotUtc ? row.lastSnapshotUtc.toISOString() : '',
+    createdAt: row.createdAt ? row.createdAt.toISOString() : '',
+    updatedAt: row.updatedAt ? row.updatedAt.toISOString() : '',
   }));
 }
 
@@ -63,6 +65,8 @@ export async function getAccountById(id: number): Promise<CopilotAccount | null>
     ...row,
     quotaResetDateUtc: row.quotaResetDateUtc ? row.quotaResetDateUtc.toISOString() : '',
     lastSnapshotUtc: row.lastSnapshotUtc ? row.lastSnapshotUtc.toISOString() : '',
+    createdAt: row.createdAt ? row.createdAt.toISOString() : '',
+    updatedAt: row.updatedAt ? row.updatedAt.toISOString() : '',
   };
 }
 
@@ -102,6 +106,8 @@ export async function createAccount(input: CreateAccountInput): Promise<CopilotA
     ...row!,
     quotaResetDateUtc: row!.quotaResetDateUtc ? row!.quotaResetDateUtc.toISOString() : '',
     lastSnapshotUtc: row!.lastSnapshotUtc ? row!.lastSnapshotUtc.toISOString() : '',
+    createdAt: row!.createdAt ? row!.createdAt.toISOString() : '',
+    updatedAt: row!.updatedAt ? row!.updatedAt.toISOString() : '',
   };
 }
 
@@ -171,6 +177,8 @@ export async function updateAccount(input: UpdateAccountInput): Promise<CopilotA
     ...row,
     quotaResetDateUtc: row.quotaResetDateUtc ? row.quotaResetDateUtc.toISOString() : '',
     lastSnapshotUtc: row.lastSnapshotUtc ? row.lastSnapshotUtc.toISOString() : '',
+    createdAt: row.createdAt ? row.createdAt.toISOString() : '',
+    updatedAt: row.updatedAt ? row.updatedAt.toISOString() : '',
   };
 }
 

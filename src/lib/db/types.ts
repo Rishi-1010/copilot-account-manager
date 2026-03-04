@@ -37,8 +37,8 @@ export interface CopilotAccount {
   quotaResetDateUtc: string;
   lastSnapshotUtc: string;
   tokenEncrypted: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
   usageData?: UsageData | null;
 }
 
