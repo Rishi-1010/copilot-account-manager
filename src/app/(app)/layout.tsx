@@ -4,11 +4,11 @@ import React from 'react';
 import { AppSidebar } from '@/components/app-sidebar';
 import { SiteHeader } from '@/components/site-header';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { SpacetimeCopilotProvider } from '@/lib/spacetimedb/provider';
+import { AccountsProvider } from '@/lib/db/provider';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SpacetimeCopilotProvider>
+    <AccountsProvider>
       <SidebarProvider
         style={
           {
@@ -27,6 +27,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </SidebarInset>
       </SidebarProvider>
-    </SpacetimeCopilotProvider>
+    </AccountsProvider>
   );
 }

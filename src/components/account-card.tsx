@@ -2,13 +2,14 @@
 
 import * as React from 'react';
 import {
-  IconAlertCircle,
-  IconAlertTriangle,
   IconDotsVertical,
   IconEdit,
   IconRefresh,
-  IconShieldCheck,
   IconTrash,
+  IconTrendingUp,
+  IconCurrencyDollar,
+  IconAlertCircle,
+  IconShieldCheck,
 } from '@tabler/icons-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -29,73 +30,30 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Progress } from '@/components/ui/progress';
 import type { CopilotAccount } from '@/components/data-table';
+import { QUOTA_CONFIG, calculateUsagePercentage, getUsageStatus } from '@/lib/quota-config';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
-function getStatusInfo(pct: number) {
-  if (pct < 10)
-    return {
-      label: 'Critical',
-      variant: 'destructive' as const,
-      icon: IconAlertCircle,
-    };
-  if (pct < 30)
-    return {
-      label: 'Low',
-      variant: 'secondary' as const,
-      icon: IconAlertTriangle,
-    };
-  if (pct < 70)
-    return {
-      label: 'Watch',
-      variant: 'secondary' as const,
-      icon: IconAlertTriangle,
-    };
-  return {
-    label: 'Healthy',
-    variant: 'outline' as const,
-    icon: IconShieldCheck,
-  };
-}
-
-function toIST(utc: string): string {
+function formatDate(utc: string): string {
   try {
-    return (
-      new Date(utc).toLocaleString('en-IN', {
-        timeZone: 'Asia/Kolkata',
-        day: '2-digit',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-      }) + ' IST'
-    );
+    return new Date(utc).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   } catch {
     return utc;
   }
 }
 
-function countdown(utc: string): string {
-  const diff = new Date(utc).getTime() - Date.now();
-  const abs = Math.abs(diff);
-  const d = Math.floor(abs / 86_400_000);
-  const h = Math.floor((abs % 86_400_000) / 3_600_000);
-  const label = d > 0 ? `${d}d ${h}h` : `${h}h`;
-  return diff > 0 ? `in ${label}` : `${label} ago`;
-}
-
-function statusColor(pct: number) {
-  if (pct < 10) return 'text-red-500';
-  if (pct < 30) return 'text-orange-500';
-  if (pct < 70) return 'text-yellow-500';
-  return 'text-green-500';
-}
-
-function progressColor(pct: number) {
-  if (pct < 10) return '[&>div]:bg-red-500';
-  if (pct < 30) return '[&>div]:bg-orange-500';
-  if (pct < 70) return '[&>div]:bg-yellow-500';
-  return '[&>div]:bg-green-500';
+function formatPeriod(timePeriod?: { year: number; month?: number }): string {
+  if (!timePeriod) return 'No data';
+  if (timePeriod.month) {
+    const monthName = new Date(timePeriod.year, timePeriod.month - 1).toLocaleString('en-US', { month: 'short' });
+    return `${monthName} ${timePeriod.year}`;
+  }
+  return `${timePeriod.year}`;
 }
 
 // ─── AccountCard ───────────────────────────────────────────────────────────────
@@ -111,8 +69,16 @@ export function AccountCard({
   onEdit?: (account: CopilotAccount) => void;
   onDelete?: (id: number) => void;
 }) {
-  const pct = account.premiumPercentRemaining;
-  const { label, variant, icon: StatusIcon } = getStatusInfo(pct);
+  const hasUsage = account.usageData && account.usageData.totalRequests > 0;
+  const totalRequests = account.usageData?.totalRequests || 0;
+  const totalAmount = account.usageData?.totalAmount || 0;
+  const period = formatPeriod(account.usageData?.timePeriod);
+  
+  // Calculate usage percentages
+  const requestsPercentage = calculateUsagePercentage(totalRequests, QUOTA_CONFIG.MONTHLY_REQUEST_LIMIT);
+  const budgetPercentage = calculateUsagePercentage(totalAmount, QUOTA_CONFIG.MONTHLY_BUDGET_LIMIT);
+  const usagePercentage = Math.max(requestsPercentage, budgetPercentage);
+  const status = getUsageStatus(usagePercentage);
 
   return (
     <Card className="@container/card relative">
@@ -137,10 +103,15 @@ export function AccountCard({
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <Badge variant={variant} className="gap-1 text-xs">
-              <StatusIcon className="size-3" />
-              {label}
-            </Badge>
+            {hasUsage && (
+              <Badge 
+                variant={usagePercentage >= 90 ? 'destructive' : usagePercentage >= 70 ? 'secondary' : 'outline'}
+                className="gap-1 text-xs"
+              >
+                {usagePercentage >= 90 ? <IconAlertCircle className="size-3" /> : <IconShieldCheck className="size-3" />}
+                {status.label}
+              </Badge>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="size-7">
@@ -172,52 +143,85 @@ export function AccountCard({
       </CardHeader>
 
       <CardContent className="flex flex-col gap-3">
-        {/* Premium usage bar */}
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Premium Remaining</span>
-            <span className={`font-semibold ${statusColor(pct)}`}>
-              {pct.toFixed(1)}%
-            </span>
-          </div>
-          <Progress value={pct} className={`h-2 ${progressColor(pct)}`} />
-          <div className="text-muted-foreground flex justify-between text-[11px]">
-            <span>
-              {account.premiumUnitsRemaining} / {account.premiumEntitlement}{' '}
-              units
-            </span>
-            <span>{(100 - pct).toFixed(1)}% used</span>
-          </div>
-        </div>
+        {/* Usage Stats */}
+        {hasUsage ? (
+          <>
+            {/* Usage percentage bar */}
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Budget Used</span>
+                <span className={`font-semibold ${status.color}`}>
+                  {usagePercentage.toFixed(1)}%
+                </span>
+              </div>
+              <Progress value={usagePercentage} className={`h-2 ${status.bgColor}`} />
+              <div className="text-muted-foreground flex justify-between text-[11px]">
+                <span>
+                  {usagePercentage < 100 
+                    ? `${(100 - usagePercentage).toFixed(0)}% remaining`
+                    : 'Over budget'
+                  }
+                </span>
+                <span>{period}</span>
+              </div>
+            </div>
 
-        {/* Info grid */}
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="bg-muted/50 rounded-md p-2">
-            <span className="text-muted-foreground block">Chat</span>
-            <span className="font-medium">
-              {account.chatUnlimited ? 'Unlimited' : 'Limited'}
-            </span>
-          </div>
-          <div className="bg-muted/50 rounded-md p-2">
-            <span className="text-muted-foreground block">Completions</span>
-            <span className="font-medium">
-              {account.completionsUnlimited ? 'Unlimited' : 'Limited'}
-            </span>
-          </div>
-        </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="bg-muted/50 rounded-md p-2.5">
+                <div className="flex items-center gap-1 text-muted-foreground mb-1">
+                  <IconTrendingUp className="size-3" />
+                  <span className="text-[10px] uppercase tracking-wide">Requests</span>
+                </div>
+                <span className="font-semibold text-base">
+                  {totalRequests.toLocaleString()}
+                </span>
+                <span className="text-[10px] text-muted-foreground mt-0.5 block">
+                  {requestsPercentage.toFixed(0)}% of {QUOTA_CONFIG.MONTHLY_REQUEST_LIMIT}
+                </span>
+              </div>
+              <div className="bg-muted/50 rounded-md p-2.5">
+                <div className="flex items-center gap-1 text-muted-foreground mb-1">
+                  <IconCurrencyDollar className="size-3" />
+                  <span className="text-[10px] uppercase tracking-wide">Spent</span>
+                </div>
+                <span className="font-semibold text-base">
+                  ${totalAmount.toFixed(2)}
+                </span>
+                <span className="text-[10px] text-muted-foreground mt-0.5 block">
+                  {budgetPercentage.toFixed(0)}% of ${QUOTA_CONFIG.MONTHLY_BUDGET_LIMIT}
+                </span>
+              </div>
+            </div>
 
-        {/* Reset & Last Checked */}
-        <div className="flex flex-col gap-1 border-t pt-2 text-xs">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Resets</span>
-            <span className="font-medium">
-              {countdown(account.quotaResetDateUtc)}
-            </span>
+            {/* Model breakdown */}
+            {account.usageData?.items && account.usageData.items.length > 0 && (
+              <div className="flex flex-col gap-1.5 border-t pt-2">
+                <span className="text-muted-foreground text-[10px] uppercase tracking-wide font-medium">Models Used</span>
+                <div className="flex flex-col gap-1 text-xs">
+                  {account.usageData.items.slice(0, 3).map((item, idx) => (
+                    <div key={idx} className="flex justify-between items-center">
+                      <span className="text-muted-foreground truncate flex-1 mr-2">{item.model}</span>
+                      <span className="font-medium tabular-nums">{item.grossQuantity.toFixed(1)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="bg-muted/30 rounded-md p-4 text-center">
+            <span className="text-muted-foreground text-xs">No usage data for {period}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Last Checked</span>
-            <span>{toIST(account.lastSnapshotUtc)}</span>
-          </div>
+        )}
+
+        {/* Last Updated */}
+        <div className="flex justify-between border-t pt-2 text-xs">
+          <span className="text-muted-foreground">Period</span>
+          <span className="font-medium">{period}</span>
+        </div>
+        <div className="flex justify-between text-xs">
+          <span className="text-muted-foreground">Last Updated</span>
+          <span>{formatDate(account.lastSnapshotUtc)}</span>
         </div>
       </CardContent>
     </Card>

@@ -1,6 +1,6 @@
 # Copilot Account Manager
 
-A Next.js dashboard for tracking and managing GitHub Copilot account usage, backed by SpacetimeDB for real-time updates.
+A Next.js dashboard for tracking and managing GitHub Copilot account usage, backed by PostgreSQL.
 
 ## What this project does
 
@@ -14,55 +14,59 @@ A Next.js dashboard for tracking and managing GitHub Copilot account usage, back
 - Next.js 16 + React 19
 - TypeScript
 - Tailwind CSS + shadcn/ui
-- SpacetimeDB (`spacetimedb` + `spacetimedb/react`)
+- PostgreSQL (via `pg` client)
+- GitHub Billing API for usage tracking
 
 ## Prerequisites
 
 - Node.js 20+
-- bun (preferred) or npm
-- SpacetimeDB CLI installed
+- npm
+- PostgreSQL 12+ installed and running
 
 ## Environment setup
 
-1. Copy env template:
+1. Create `.env.local`:
 
    ```bash
-   cp .env.example .env.local
+   DATABASE_URL=postgresql://username:password@localhost:5432/copilot_accounts
    ```
 
-2. Verify or set:
+   Replace `username` and `password` with your PostgreSQL credentials.
 
-   ```env
-   NEXT_PUBLIC_SPACETIMEDB_URL=ws://127.0.0.1:4000
-   ```
+2. Set up the database (see `docs/POSTGRESQL_SETUP.md` for details)
+
+## Configuring quota limits
+
+Since GitHub doesn't provide quota limits via API, the app uses **assumed monthly limits** for calculating usage percentages:
+
+- **Request limit**: 300 requests/month (GitHub Copilot Premium limit)
+- **Budget limit**: $50/month (default)
+
+To customize these limits, edit [`src/lib/quota-config.ts`](src/lib/quota-config.ts):
+
+```typescript
+export const QUOTA_CONFIG = {
+  MONTHLY_REQUEST_LIMIT: 300,   // Change to your expected limit
+  MONTHLY_BUDGET_LIMIT: 50,     // Change to your monthly budget
+  // ...
+};
+```
+
+The app calculates usage percentages based on these limits and displays:
+- Color-coded status badges (Healthy/Watch/Warning/Critical)
+- Progress bars showing % used
+- Remaining budget/requests
 
 ## Local development
 
-### 1) Start SpacetimeDB
+### 1) Ensure PostgreSQL is running
+
+Make sure your PostgreSQL server is running on `localhost:5432` (or update `DATABASE_URL` accordingly).
+
+### 2) Run frontend
 
 ```bash
-spacetime start -- --listen-addr 0.0.0.0:4000
-```
-
-### 2) Publish backend module
-
-```bash
-cd server
-spacetime publish copilot-monitor -s http://127.0.0.1:4000
-```
-
-### 3) Run frontend
-
-From project root:
-
-```bash
-bun install
-bun dev
-```
-
-Or with npm:
-
-```bash
+# From project root
 npm install
 npm run dev
 ```
@@ -84,13 +88,13 @@ Open http://localhost:3000.
 
 - `src/app` — App Router pages/layouts
 - `src/components` — reusable UI and feature components
-- `src/lib/spacetimedb` — generated bindings + provider/hooks
-- `server/spacetimedb` — SpacetimeDB module source
+- `src/lib/db` — database utilities + provider/hooks
+- `src/app/api` — REST API routes for database operations
+- `docs/` — setup documentation
 
-## Branding: GitHub Copilot logo component
+## GitHubCopilot SVG component
 
-The shared logo component lives at `src/components/GitHubCopilot.tsx` and is used in multiple UI locations:
-
+The `GitHubCopilot` component is used in:
 - Sidebar product mark
 - Top site header title area
 - Dashboard empty-state callout
@@ -105,6 +109,6 @@ import { GitHubCopilot } from '@/components/GitHubCopilot';
 
 ## Notes
 
-- Keep secrets in `.env.local` only.
 - Do not commit `.env.local`.
-- For additional backend details, see `SPACETIMEDB_SETUP.md`.
+- For database setup details, see `docs/POSTGRESQL_SETUP.md`.
+- For GitHub API information, see `docs/GITHUB_API.md`.

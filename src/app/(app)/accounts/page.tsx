@@ -3,14 +3,14 @@
 import * as React from 'react';
 import { IconRefresh } from '@tabler/icons-react';
 
-import { useAccounts } from '@/lib/spacetimedb/provider';
+import { useAccounts } from '@/lib/db/provider';
 import { AccountsManager } from '@/components/accounts-manager';
 import { AddAccountModal } from '@/components/add-account-modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 export default function AccountsPage() {
-  const { accounts, isLoading, refresh, addAccount } = useAccounts();
+  const { accounts, isLoading, refresh, refreshAccount, addAccount } = useAccounts();
   const [search, setSearch] = React.useState('');
 
   // Filter accounts by search (passed to AccountsManager as overridden list)
@@ -48,7 +48,15 @@ export default function AccountsPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => accounts.forEach((a) => refresh(a.id))}
+            onClick={async () => {
+              for (const account of accounts) {
+                try {
+                  await refreshAccount(account.id);
+                } catch (err) {
+                  console.error(`Failed to refresh account ${account.login}:`, err);
+                }
+              }
+            }}
           >
             <IconRefresh className="mr-1.5 size-4" />
             Refresh All

@@ -13,7 +13,7 @@
 
 import * as React from 'react';
 
-import { useAccounts } from '@/lib/spacetimedb/provider';
+import { useAccounts } from '@/lib/db/provider';
 import { AccountCardGrid } from '@/components/account-card';
 import { EditAccountModal } from '@/components/edit-account-modal';
 import { DeleteAccountDialog } from '@/components/delete-account-dialog';
@@ -29,7 +29,7 @@ export function AccountsManager({
 }: AccountsManagerProps) {
   const {
     accounts: ctxAccounts,
-    refresh,
+    refreshAccount: refresh,
     removeAccount,
     updateAccount,
   } = useAccounts();
@@ -62,9 +62,40 @@ export function AccountsManager({
         onOpenChange={(open) => {
           if (!open) setEditAccount(null);
         }}
-        onSave={(id, token) => {
-          updateAccount(id, token);
-          setEditAccount(null);
+        onSave={async (id, token) => {
+          // Fetch fresh quota data from GitHub via our API route
+          try {
+            const quotaResponse = await fetch('/api/github/quota', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ token }),
+            });
+
+            if (!quotaResponse.ok) {
+              const errorData = await quotaResponse.json();
+              throw new Error(errorData.error || 'Failed to fetch Copilot quota data');
+            }
+
+            const data = await quotaResponse.json();
+            
+            // Update account with fresh quota data and new token
+            await updateAccount({
+              id,
+              premiumPercentRemaining: data.premiumPercentRemaining,
+              premiumUnitsRemaining: data.premiumUnitsRemaining,
+              premiumEntitlement: data.premiumEntitlement,
+              chatUnlimited: data.chatUnlimited,
+              completionsUnlimited: data.completionsUnlimited,
+              quotaResetDateUtc: data.quotaResetDateUtc,
+              lastSnapshotUtc: new Date().toISOString(),
+              tokenEncrypted: token, // Update the token
+            });
+            
+            setEditAccount(null);
+          } catch (error) {
+            console.error('Error updating account:', error);
+            throw error;
+          }
         }}
       />
 

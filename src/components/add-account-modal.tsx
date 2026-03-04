@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { IconPlus, IconEye, IconEyeOff } from '@tabler/icons-react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -15,9 +16,10 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import type { CreateAccountInput } from '@/lib/db/types';
 
 interface AddAccountModalProps {
-  onAdd: (token: string) => void;
+  onAdd: (account: CreateAccountInput) => Promise<void>;
 }
 
 export function AddAccountModal({ onAdd }: AddAccountModalProps) {
@@ -32,9 +34,46 @@ export function AddAccountModal({ onAdd }: AddAccountModalProps) {
 
     setIsSubmitting(true);
     try {
-      onAdd(token.trim());
+      // Sanitize token: remove whitespace and non-ASCII characters
+      const sanitizedToken = token.trim().replace(/[^\x00-\x7F]/g, '');
+      
+      // Validate token format
+      if (!/^[a-zA-Z0-9_]+$/.test(sanitizedToken)) {
+        toast.error('Invalid token format. Please paste only the token without any special characters.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Validate token and fetch user data from our API route
+      const validateResponse = await fetch('/api/github/validate-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: sanitizedToken }),
+      });
+
+      if (!validateResponse.ok) {
+        const errorData = await validateResponse.json();
+        throw new Error(errorData.error || 'Invalid GitHub token or insufficient permissions');
+      }
+
+      const { login, avatarUrl, plan, accessTypeSku } = await validateResponse.json();
+
+      // Create account input
+      const accountInput: CreateAccountInput = {
+        login,
+        avatarUrl,
+        plan,
+        accessTypeSku,
+        tokenEncrypted: sanitizedToken, // Use the sanitized token
+      };
+
+      await onAdd(accountInput);
+      toast.success(`Account ${login} added successfully!`);
       setToken('');
       setOpen(false);
+    } catch (error) {
+      console.error('Error adding account:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to add account');
     } finally {
       setIsSubmitting(false);
     }
@@ -90,7 +129,8 @@ export function AddAccountModal({ onAdd }: AddAccountModalProps) {
                 </Button>
               </div>
               <p className="text-muted-foreground text-xs">
-                Required scopes: <code className="text-[11px]">read:user</code>.
+                Required scopes: <code className="text-[11px]">read:user</code>,{' '}
+                <code className="text-[11px]">user</code> (for billing data).
                 Classic personal access tokens (ghp_) are recommended.
               </p>
             </div>

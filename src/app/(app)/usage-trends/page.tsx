@@ -11,7 +11,7 @@ import {
   YAxis,
 } from 'recharts';
 
-import { useAccounts } from '@/lib/spacetimedb/provider';
+import { useAccounts } from '@/lib/db/provider';
 import {
   Card,
   CardAction,

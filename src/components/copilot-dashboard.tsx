@@ -3,7 +3,7 @@
 import { DataTable } from '@/components/data-table';
 import { SectionCards } from '@/components/section-cards';
 import { ChartAreaInteractive } from '@/components/chart-area-interactive';
-import { useAccounts } from '@/lib/spacetimedb/provider';
+import { useAccounts } from '@/lib/db/provider';
 
 export function CopilotDashboard() {
   const { accounts, isLoading } = useAccounts();
@@ -12,7 +12,7 @@ export function CopilotDashboard() {
     return (
       <div className="flex flex-1 items-center justify-center py-20">
         <span className="text-muted-foreground animate-pulse text-sm">
-          Connecting to SpacetimeDB…
+          Loading accounts…
         </span>
       </div>
     );

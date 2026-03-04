@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { IconLayoutGrid, IconTable, IconRefresh } from '@tabler/icons-react';
 
-import { useAccounts } from '@/lib/spacetimedb/provider';
+import { useAccounts } from '@/lib/db/provider';
 import { SectionCards } from '@/components/section-cards';
 import { DataTable } from '@/components/data-table';
 import { AccountsManager } from '@/components/accounts-manager';

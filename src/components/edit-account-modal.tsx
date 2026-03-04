@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { IconEye, IconEyeOff } from '@tabler/icons-react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -20,7 +21,7 @@ interface EditAccountModalProps {
   account: CopilotAccount | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (id: number, token: string) => void;
+  onSave: (id: number, token: string) => Promise<void>;
 }
 
 export function EditAccountModal({
@@ -47,8 +48,22 @@ export function EditAccountModal({
 
     setIsSubmitting(true);
     try {
-      onSave(account.id, token.trim());
+      // Sanitize token: remove whitespace and non-ASCII characters
+      const sanitizedToken = token.trim().replace(/[^\x00-\x7F]/g, '');
+      
+      // Validate token format
+      if (!/^[a-zA-Z0-9_]+$/.test(sanitizedToken)) {
+        toast.error('Invalid token format. Please paste only the token without any special characters.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      await onSave(account.id, sanitizedToken);
+      toast.success(`Token updated for ${account.login}`);
       onOpenChange(false);
+    } catch (error) {
+      console.error('Error updating token:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update token');
     } finally {
       setIsSubmitting(false);
     }
