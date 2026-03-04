@@ -2,6 +2,8 @@
 
 A Next.js dashboard for tracking and managing GitHub Copilot account usage, backed by PostgreSQL.
 
+🚀 **Live Demo**: [rishi-bardoliya-copilot-management.vercel.app](https://rishi-bardoliya-copilot-management.vercel.app)
+
 ## What this project does
 
 - Displays account usage and status in card and table views
