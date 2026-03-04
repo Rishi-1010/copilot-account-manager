@@ -93,6 +93,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AddAccountModal } from '@/components/add-account-modal';
+import type { CreateAccountInput } from '@/lib/db/types';
 
 // ─── Schema ────────────────────────────────────────────────────────────────────
 
@@ -408,7 +409,7 @@ export function DataTable({
   data: CopilotAccount[];
   onRefresh?: (id: number) => void;
   onDelete?: (id: number) => void;
-  onAdd?: (token: string) => void;
+  onAdd?: (account: CreateAccountInput) => Promise<void>;
 }) {
   const [data, setData] = React.useState(() => initialData);
 
