@@ -17,7 +17,7 @@ import { useAccounts } from '@/lib/db/provider';
 import { AccountCardGrid } from '@/components/account-card';
 import { EditAccountModal } from '@/components/edit-account-modal';
 import { DeleteAccountDialog } from '@/components/delete-account-dialog';
-import type { CopilotAccount } from '@/components/data-table';
+import type { CopilotAccount } from '@/lib/db/types';
 
 interface AccountsManagerProps {
   /** Pre-filtered list — falls back to the full list from context when omitted */

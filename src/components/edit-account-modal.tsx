@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { CopilotAccount } from '@/components/data-table';
+import type { CopilotAccount } from '@/lib/db/types';
 
 interface EditAccountModalProps {
   account: CopilotAccount | null;

@@ -17,7 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import type { CopilotAccount } from '@/components/data-table';
+import type { CopilotAccount } from '@/lib/db/types';
 import { QUOTA_CONFIG, calculateUsagePercentage } from '@/lib/quota-config';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
