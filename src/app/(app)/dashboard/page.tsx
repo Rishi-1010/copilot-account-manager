@@ -11,18 +11,45 @@ import { AddAccountModal } from '@/components/add-account-modal';
 import { GitHubCopilot } from '@/components/GitHubCopilot';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { SkeletonSectionCards, SkeletonAccountGrid } from '@/components/ui/skeleton-card';
 
 export default function DashboardPage() {
   const { accounts, isLoading, refresh, addAccount, removeAccount } =
     useAccounts();
   const [view, setView] = React.useState<string>('cards');
 
-  if (isLoading && accounts.length === 0) {
+  if (isLoading) {
     return (
-      <div className="flex flex-1 items-center justify-center py-20">
-        <span className="text-muted-foreground animate-pulse text-sm">
-          Loading accounts…
-        </span>
+      <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+        <div className="px-4 lg:px-6">
+          <SkeletonSectionCards />
+        </div>
+        
+        <div className="flex items-center justify-between px-4 lg:px-6">
+          <div className="h-7 w-32 bg-muted animate-pulse rounded" />
+          <div className="flex items-center gap-2">
+            <div className="h-9 w-28 bg-muted animate-pulse rounded" />
+            <div className="h-9 w-32 bg-muted animate-pulse rounded" />
+            <div className="h-9 w-20 bg-muted animate-pulse rounded" />
+          </div>
+        </div>
+
+        <div className="px-4 lg:px-6">
+          <SkeletonAccountGrid />
+        </div>
+      </div>
+    );
+  }
+
+  if (accounts.length === 0 && !isLoading) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-2 py-20">
+        <GitHubCopilot className="text-primary mb-1 size-12" />
+        <p className="text-muted-foreground text-sm">
+          No accounts yet. Add your first GitHub Copilot account to get
+          started.
+        </p>
+        <AddAccountModal onAdd={addAccount} />
       </div>
     );
   }

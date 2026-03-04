@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (username: string, password: string) => boolean;
   logout: () => void;
 }
@@ -15,14 +16,14 @@ const AUTH_STORAGE_KEY = 'copilot-admin-auth';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
   const router = useRouter();
 
   React.useEffect(() => {
-    // Check if user is already authenticated
+    // Check if user is already authenticated on mount
     const authStatus = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (authStatus === 'true') {
-      setIsAuthenticated(true);
-    }
+    setIsAuthenticated(authStatus === 'true');
+    setIsLoading(false);
   }, []);
 
   const login = (username: string, password: string): boolean => {
@@ -42,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

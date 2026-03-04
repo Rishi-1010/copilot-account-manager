@@ -8,6 +8,7 @@ import { AccountsManager } from '@/components/accounts-manager';
 import { AddAccountModal } from '@/components/add-account-modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { SkeletonAccountGrid } from '@/components/ui/skeleton-card';
 
 export default function AccountsPage() {
   const { accounts, isLoading, refresh, refreshAccount, addAccount } = useAccounts();
@@ -23,12 +24,27 @@ export default function AccountsPage() {
     );
   }, [accounts, search]);
 
-  if (isLoading && accounts.length === 0) {
+  if (isLoading) {
     return (
-      <div className="flex flex-1 items-center justify-center py-20">
-        <span className="text-muted-foreground animate-pulse text-sm">
-          Loading accounts…
-        </span>
+      <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+        <div className="flex flex-col gap-4 px-4 sm:flex-row sm:items-center sm:justify-between lg:px-6">
+          <div className="space-y-2">
+            <div className="h-7 w-32 bg-muted animate-pulse rounded" />
+            <div className="h-4 w-96 bg-muted/60 animate-pulse rounded" />
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-9 w-28 bg-muted animate-pulse rounded" />
+            <div className="h-9 w-32 bg-muted animate-pulse rounded" />
+          </div>
+        </div>
+
+        <div className="px-4 lg:px-6">
+          <div className="h-10 w-full max-w-sm bg-muted animate-pulse rounded" />
+        </div>
+
+        <div className="px-4 lg:px-6">
+          <SkeletonAccountGrid />
+        </div>
       </div>
     );
   }
