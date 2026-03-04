@@ -29,7 +29,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Progress } from '@/components/ui/progress';
-import type { CopilotAccount } from '@/components/data-table';
+import type { CopilotAccount } from '@/lib/db/types';
 import { QUOTA_CONFIG, calculateUsagePercentage, getUsageStatus } from '@/lib/quota-config';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
